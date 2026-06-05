@@ -10,6 +10,7 @@ import {
   FiRotateCw,
   FiType,
   FiDroplet,
+  FiPlusSquare,
 } from "react-icons/fi";
 import { FONT_OPTIONS, FONT_SIZE_OPTIONS } from "../../utils/editor";
 
@@ -89,11 +90,37 @@ const ColorBtn = styled.label`
   }
 `;
 
-export function EditorToolbar({ exec, setFontSize, setFont }) {
+const AddBtn = styled.button.attrs({ type: "button" })`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.colors.primarySoft};
+  color: ${({ theme }) => theme.colors.primaryDark};
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all ${({ theme }) => theme.transitions.base};
+  &:hover {
+    background: ${({ theme }) => theme.colors.primary};
+    color: #fff;
+  }
+`;
+
+export function EditorToolbar({ exec, setFontSize, setFont, onAddSection }) {
   const keep = (e) => e.preventDefault();
 
   return (
     <Bar onMouseDown={keep}>
+      <AddBtn title="Add a new section to the page" onClick={onAddSection}>
+        <FiPlusSquare size={15} /> Add section
+      </AddBtn>
+
+      <Divider />
+
       <IconBtn title="Undo" onClick={() => exec("undo")}>
         <FiRotateCcw size={16} />
       </IconBtn>

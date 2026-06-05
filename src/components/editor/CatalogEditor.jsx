@@ -24,6 +24,7 @@ import {
 import {
   EDITOR_CSS,
   EDITOR_STYLE_ID,
+  CAT_UI_ATTR,
   PAGE_PX,
   applyStyleToSelection,
   downloadString,
@@ -31,6 +32,12 @@ import {
   serializeDoc,
   stripScripts,
   findSectionRoot,
+  moveSection,
+  createSectionOverlay,
+  duplicateElement,
+  createStarterSection,
+  createBlock,
+  sectionContainer,
 } from "../../utils/editor";
 
 
@@ -220,8 +227,9 @@ const LibPopover = styled.div`
 export function CatalogEditor({ catalog, onSaved }) {
   const iframeRef = useRef(null);
   const stageRef = useRef(null);
-  const lastRangeRef = useRef(null); 
+  const lastRangeRef = useRef(null);
   const setupDoneRef = useRef(false);
+  const overlayRef = useRef(null);
 
   const [editing, setEditing] = useState(true);
   const [selectedEl, setSelectedEl] = useState(null);
@@ -285,12 +293,14 @@ export function CatalogEditor({ catalog, onSaved }) {
 
     const isEditing = () => iframeRef.current?.dataset.editing === "true";
 
+    const isUiNode = (el) => el && el.nodeType === 1 && el.closest(`[${CAT_UI_ATTR}]`);
+
     doc.addEventListener(
       "mouseover",
       (e) => {
         if (!isEditing()) return;
         const el = e.target;
-        if (el && el.nodeType === 1 && el !== doc.body) {
+        if (el && el.nodeType === 1 && el !== doc.body && !isUiNode(el)) {
           el.setAttribute("data-cat-hover", "");
         }
       },
@@ -309,7 +319,8 @@ export function CatalogEditor({ catalog, onSaved }) {
       (e) => {
         if (!isEditing()) return;
         const el = e.target;
-        if (el && el.nodeType === 1) selectElement(el);
+        // Ignore clicks on our own resize/drag overlay so it doesn't reselect.
+        if (el && el.nodeType === 1 && !isUiNode(el)) selectElement(el);
       },
       true
     );
@@ -320,8 +331,11 @@ export function CatalogEditor({ catalog, onSaved }) {
       }
     });
 
+    // Interactive resize/drag overlay lives inside the iframe document.
+    overlayRef.current = createSectionOverlay(doc, { onChange: refresh });
+
     fitToStage();
-  }, [getDoc, selectElement]);
+  }, [getDoc, selectElement, refresh]);
 
   useEffect(() => {
     const iframe = iframeRef.current;
@@ -355,6 +369,22 @@ export function CatalogEditor({ catalog, onSaved }) {
     window.addEventListener("resize", fitToStage);
     return () => window.removeEventListener("resize", fitToStage);
   }, [fitToStage]);
+
+  const [sectionEl, setSectionEl] = useState(null);
+
+  useEffect(() => {
+    const doc = getDoc();
+    const sec =
+      editing && selectedEl && doc ? findSectionRoot(selectedEl, doc) : null;
+    setSectionEl(sec);
+    overlayRef.current?.setTarget(sec);
+  }, [editing, selectedEl, getDoc]);
+
+  useLayoutEffect(() => {
+    overlayRef.current?.reposition();
+  });
+
+  useEffect(() => () => overlayRef.current?.destroy(), []);
 
   const exec = useCallback(
     (command, value = null) => {
@@ -430,6 +460,97 @@ export function CatalogEditor({ catalog, onSaved }) {
     if (section) section.remove();
     setSelectedEl(null);
   }, [selectedEl, getDoc]);
+
+  const updateSectionStyle = useCallback(
+    (prop, value) => {
+      const doc = getDoc();
+      if (!selectedEl || !doc) return;
+      const section = findSectionRoot(selectedEl, doc);
+      if (!section) return;
+      if (value === "" || value == null) section.style.removeProperty(prop);
+      else section.style.setProperty(prop, value);
+      if (prop === "height") section.style.flex = "none";
+      refresh();
+      overlayRef.current?.reposition();
+    },
+    [selectedEl, getDoc, refresh]
+  );
+
+  const resetSection = useCallback(() => {
+    const doc = getDoc();
+    if (!selectedEl || !doc) return;
+    const section = findSectionRoot(selectedEl, doc);
+    if (!section) return;
+    ["width", "height", "flex", "flex-shrink", "background-color"].forEach((p) =>
+      section.style.removeProperty(p)
+    );
+    refresh();
+    overlayRef.current?.reposition();
+  }, [selectedEl, getDoc, refresh]);
+
+  const moveSelectedSection = useCallback(
+    (dir) => {
+      const doc = getDoc();
+      if (!selectedEl || !doc) return;
+      const section = findSectionRoot(selectedEl, doc);
+      if (moveSection(section, dir)) {
+        refresh();
+        overlayRef.current?.reposition();
+      }
+    },
+    [selectedEl, getDoc, refresh]
+  );
+
+  const duplicateSelected = useCallback(() => {
+    if (!selectedEl) return;
+    const clone = duplicateElement(selectedEl);
+    if (clone) selectElement(clone);
+    refresh();
+  }, [selectedEl, selectElement, refresh]);
+
+  const duplicateSelectedSection = useCallback(() => {
+    const doc = getDoc();
+    if (!selectedEl || !doc) return;
+    const clone = duplicateElement(findSectionRoot(selectedEl, doc));
+    if (clone) selectElement(clone);
+    refresh();
+  }, [selectedEl, getDoc, selectElement, refresh]);
+
+  const addSection = useCallback(() => {
+    const doc = getDoc();
+    if (!doc) return;
+    const section = createStarterSection(doc); // appended to the page container
+    if (section) {
+      // If a section is selected, drop the new one right after it (more likely
+      // to be on-screen than the very end of a full one-page layout).
+      if (selectedEl) {
+        const current = findSectionRoot(selectedEl, doc);
+        if (current && current.parentNode === section.parentNode) {
+          current.parentNode.insertBefore(section, current.nextSibling);
+        }
+      }
+      selectElement(section);
+      section.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    }
+    refresh();
+  }, [getDoc, selectedEl, selectElement, refresh]);
+
+  const addBlock = useCallback(
+    (type) => {
+      const doc = getDoc();
+      if (!doc) return;
+      const el = createBlock(doc, type);
+      if (!el) return;
+      if (selectedEl && selectedEl.parentNode) {
+        selectedEl.parentNode.insertBefore(el, selectedEl.nextSibling);
+      } else {
+        (sectionContainer(doc) || doc.body).appendChild(el);
+      }
+      selectElement(el);
+      refresh();
+    },
+    [getDoc, selectedEl, selectElement, refresh]
+  );
 
   const replaceImage = useCallback(
     async (file) => {
@@ -616,13 +737,15 @@ export function CatalogEditor({ catalog, onSaved }) {
         <>
           <Hint>
             <FiEdit3 size={14} />
-            Click any text to edit it. Click an image or section to style,
-            replace, or remove it.
+            Click text to edit it. Click a section to resize it (drag the
+            handles), drag the “move” tab to reorder, or use the panel to set
+            its background, size, and order.
           </Hint>
           <EditorToolbar
             exec={exec}
             setFontSize={setSelectionFontSize}
             setFont={setSelectionFont}
+            onAddSection={addSection}
             disabled={!editing}
           />
         </>
@@ -660,11 +783,19 @@ export function CatalogEditor({ catalog, onSaved }) {
         {editing && (
           <ElementPanel
             element={selectedEl}
+            section={sectionEl}
             onStyle={updateElementStyle}
+            onSectionStyle={updateSectionStyle}
+            onResetSection={resetSection}
+            onMoveSection={moveSelectedSection}
             onSelectParent={selectParent}
             onDelete={deleteElement}
             onDeleteSection={deleteSection}
             onReplaceImage={replaceImage}
+            onDuplicate={duplicateSelected}
+            onDuplicateSection={duplicateSelectedSection}
+            onAddBlock={addBlock}
+            onAddSection={addSection}
           />
         )}
       </Workspace>

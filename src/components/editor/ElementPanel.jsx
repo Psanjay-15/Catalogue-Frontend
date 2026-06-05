@@ -12,6 +12,10 @@ import {
   FiAlignRight,
   FiUpload,
   FiLayers,
+  FiArrowUp,
+  FiArrowDown,
+  FiCopy,
+  FiPlus,
 } from "react-icons/fi";
 import { Card } from "../ui/Card";
 import { Button } from "../ui/Button";
@@ -171,13 +175,72 @@ const DangerBtn = styled.button.attrs({ type: "button" })`
   }
 `;
 
+const SectionHead = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: ${({ theme }) => theme.colors.text};
+`;
+
+const OrderBtn = styled.button.attrs({ type: "button" })`
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  cursor: pointer;
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceAlt};
+    color: ${({ theme }) => theme.colors.primaryDark};
+  }
+`;
+
+const ChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+`;
+
+const AddChip = styled.button.attrs({ type: "button" })`
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: ${({ theme }) => theme.radii.pill};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  &:hover {
+    background: ${({ theme }) => theme.colors.primarySoft};
+    border-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primaryDark};
+  }
+`;
+
 export function ElementPanel({
   element,
+  section,
   onStyle,
+  onSectionStyle,
+  onResetSection,
+  onMoveSection,
   onSelectParent,
   onDelete,
   onDeleteSection,
   onReplaceImage,
+  onDuplicate,
+  onDuplicateSection,
+  onAddBlock,
+  onAddSection,
 }) {
   const fileRef = useRef(null);
 
@@ -187,9 +250,12 @@ export function ElementPanel({
         <Empty>
           <FiLayers size={26} />
           <p>
-            Click any element in the catalog to style it, replace an image, or
-            remove a section.
+            Click any element to style, duplicate, or remove it — or add a new
+            section below.
           </p>
+          <Button size="sm" onClick={onAddSection}>
+            <FiPlus size={14} /> Add a section
+          </Button>
         </Empty>
       </Panel>
     );
@@ -198,6 +264,10 @@ export function ElementPanel({
   const win = element.ownerDocument?.defaultView;
   const cs = win ? win.getComputedStyle(element) : {};
   const isImage = element.tagName === "IMG";
+
+  const sectionCs = section && win ? win.getComputedStyle(section) : null;
+  const sectionW = section ? parsePx(section.style.width || sectionCs?.width) : 0;
+  const sectionH = section ? parsePx(section.style.height || sectionCs?.height) : 0;
 
   const fontWeight = parseInt(cs.fontWeight, 10) || 400;
   const isBold = fontWeight >= 600;
@@ -381,6 +451,105 @@ export function ElementPanel({
               </Toggle>
             </Row>
           </Group>
+        </>
+      )}
+
+      <Divider />
+
+      <Group>
+        <label>Add &amp; duplicate</label>
+        <Row>
+          <Button variant="secondary" size="sm" onClick={onDuplicate}>
+            <FiCopy size={14} /> Duplicate
+          </Button>
+          <Button variant="ghost" size="sm" onClick={onDuplicateSection}>
+            <FiLayers size={14} /> Section
+          </Button>
+        </Row>
+        <ChipRow>
+          <AddChip onClick={() => onAddBlock("heading")}>
+            <FiPlus size={12} /> Heading
+          </AddChip>
+          <AddChip onClick={() => onAddBlock("text")}>
+            <FiPlus size={12} /> Text
+          </AddChip>
+          <AddChip onClick={() => onAddBlock("image")}>
+            <FiPlus size={12} /> Image
+          </AddChip>
+          <AddChip onClick={() => onAddBlock("button")}>
+            <FiPlus size={12} /> Button
+          </AddChip>
+        </ChipRow>
+      </Group>
+
+      {section && (
+        <>
+          <Divider />
+
+          <SectionHead>
+            <span>Section</span>
+            <Row style={{ flex: "none", gap: 6 }}>
+              <OrderBtn title="Move section up" onClick={() => onMoveSection(-1)}>
+                <FiArrowUp size={14} />
+              </OrderBtn>
+              <OrderBtn
+                title="Move section down"
+                onClick={() => onMoveSection(1)}
+              >
+                <FiArrowDown size={14} />
+              </OrderBtn>
+            </Row>
+          </SectionHead>
+
+          <Group>
+            <ColorField>
+              Section background
+              <input
+                type="color"
+                value={rgbToHex(sectionCs?.backgroundColor)}
+                onChange={(e) =>
+                  onSectionStyle("background-color", e.target.value)
+                }
+              />
+            </ColorField>
+          </Group>
+
+          <Group>
+            <label>Width — {sectionW}px</label>
+            <Range
+              type="range"
+              min={120}
+              max={1600}
+              step={5}
+              value={Math.min(1600, sectionW)}
+              onChange={(e) => onSectionStyle("width", `${e.target.value}px`)}
+            />
+          </Group>
+
+          <Group>
+            <label>Height — {sectionH}px</label>
+            <Range
+              type="range"
+              min={40}
+              max={2400}
+              step={5}
+              value={Math.min(2400, sectionH)}
+              onChange={(e) => onSectionStyle("height", `${e.target.value}px`)}
+            />
+          </Group>
+
+          <Row>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onSectionStyle("width", "100%")}
+            >
+              Full width
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onResetSection}>
+              Reset size
+            </Button>
+          </Row>
         </>
       )}
 
