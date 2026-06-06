@@ -1,9 +1,13 @@
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { FiArrowUpRight, FiImage } from "react-icons/fi";
 import { Card } from "../ui/Card";
 import { Badge } from "../ui/Badge";
 import { Button } from "../ui/Button";
+
+const A4_W = 794;
+const A4_H = 1123;
 
 const Wrap = styled(Card)`
   overflow: hidden;
@@ -13,17 +17,21 @@ const Wrap = styled(Card)`
 
 const Thumb = styled.div`
   position: relative;
-  aspect-ratio: 794 / 1123; /* A4 portrait — matches the preview PNG */
+  aspect-ratio: ${A4_W} / ${A4_H};
   background: ${({ theme }) => theme.colors.surfaceAlt};
   overflow: hidden;
   display: grid;
   place-items: center;
 
-  img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top center;
+  iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: ${A4_W}px;
+    height: ${A4_H}px;
+    border: 0;
+    transform-origin: top left;
+    pointer-events: none; /* clicks fall through to the card */
   }
   .fallback {
     display: flex;
@@ -68,22 +76,38 @@ export function TemplateCard({ template }) {
   const navigate = useNavigate();
   const isAi = template.kind?.toLowerCase().includes("ai");
 
+  const thumbRef = useRef(null);
+  const [scale, setScale] = useState(0.4);
+
+  useEffect(() => {
+    const el = thumbRef.current;
+    if (!el) return;
+    const update = () => setScale(el.clientWidth / A4_W);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <Wrap $interactive onClick={() => navigate(`/templates/${template.id}`)}>
-      <Thumb>
-        <img
-          src={template.previewImageUrl}
-          alt={`${template.name} preview`}
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-            e.currentTarget.nextElementSibling.style.display = "flex";
-          }}
-        />
-        <span className="fallback" style={{ display: "none" }}>
-          <FiImage size={26} />
-          Preview not generated
-        </span>
+      <Thumb ref={thumbRef}>
+        {template.sampleHtml ? (
+          <iframe
+            title={`${template.name} preview`}
+            srcDoc={template.sampleHtml}
+            loading="lazy"
+            scrolling="no"
+            tabIndex={-1}
+            sandbox="allow-same-origin"
+            style={{ transform: `scale(${scale})` }}
+          />
+        ) : (
+          <span className="fallback">
+            <FiImage size={26} />
+            No preview
+          </span>
+        )}
       </Thumb>
 
       <Body>

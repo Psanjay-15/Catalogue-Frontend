@@ -3,10 +3,8 @@
  * touch axios directly. Each function maps to one backend endpoint.
  *
  *   Templates:
- *     GET  /api/v1/templates
- *     GET  /api/v1/templates/{id}
- *     GET  /api/v1/templates/{id}/preview.png   (image)
- *     GET  /api/v1/templates/{id}/sample.html   (html)
+ *     GET  /api/v1/templates           -> [{ id, name, description, kind, sample_html }]
+ *     GET  /api/v1/templates/{id}      -> single template (with sample_html)
  *   Catalogs:
  *     POST /api/v1/catalogs                      -> 202 { id, status, ... }
  *     GET  /api/v1/catalogs/{id}                 -> status (+ html when done)
@@ -21,16 +19,6 @@ export const API_ORIGIN =
 export const API_BASE = `${API_ORIGIN}/api/v1`;
 
 axios.defaults.timeout = 30000;
-
-/**
- * Turn a relative path the backend returns (e.g. "/api/v1/templates/x/preview.png")
- * into an absolute URL the browser can load directly.
- */
-export function assetUrl(path) {
-  if (!path) return "";
-  if (/^https?:\/\//i.test(path)) return path;
-  return `${API_ORIGIN}${path.startsWith("/") ? "" : "/"}${path}`;
-}
 
 export function toErrorMessage(error) {
   const data = error?.response?.data;
@@ -47,24 +35,12 @@ export function toErrorMessage(error) {
 
 export async function listTemplates() {
   const { data } = await axios.get(`${API_BASE}/templates`);
-  return data.map((t) => ({
-    ...t,
-    previewImageUrl: assetUrl(t.preview_image_url),
-    sampleHtmlUrl: assetUrl(t.sample_html_url),
-  }));
+  return data.map((t) => ({ ...t, sampleHtml: t.sample_html }));
 }
 
 export async function getTemplate(id) {
   const { data } = await axios.get(`${API_BASE}/templates/${id}`);
-  return {
-    ...data,
-    previewImageUrl: assetUrl(data.preview_image_url),
-    sampleHtmlUrl: assetUrl(data.sample_html_url),
-  };
-}
-
-export function templateSampleUrl(id) {
-  return `${API_ORIGIN}/api/v1/templates/${id}/sample.html`;
+  return { ...data, sampleHtml: data.sample_html };
 }
 
 

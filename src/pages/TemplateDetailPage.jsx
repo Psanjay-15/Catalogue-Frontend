@@ -6,11 +6,7 @@ import { Container } from "../components/ui/Container";
 import { Button } from "../components/ui/Button";
 import { Badge } from "../components/ui/Badge";
 import { Spinner } from "../components/ui/Spinner";
-import {
-  getTemplate,
-  templateSampleUrl,
-  toErrorMessage,
-} from "../services";
+import { getTemplate, toErrorMessage } from "../services";
 
 const Wrap = styled(Container)`
   padding-top: 32px;
@@ -90,6 +86,15 @@ export function TemplateDetailPage() {
 
   const isAi = template?.kind?.toLowerCase().includes("ai");
 
+  const openFullPage = () => {
+    if (!template?.sampleHtml) return;
+    const url = URL.createObjectURL(
+      new Blob([template.sampleHtml], { type: "text/html" })
+    );
+    window.open(url, "_blank", "noopener");
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
+
   return (
     <Wrap>
       <Button variant="ghost" size="sm" onClick={() => navigate("/templates")}>
@@ -124,12 +129,7 @@ export function TemplateDetailPage() {
               <p>{template.description}</p>
             </div>
             <div className="actions">
-              <Button
-                href={templateSampleUrl(template.id)}
-                target="_blank"
-                rel="noreferrer"
-                variant="secondary"
-              >
+              <Button variant="secondary" onClick={openFullPage}>
                 Open full page <FiExternalLink size={15} />
               </Button>
               <Button to={`/create?template=${template.id}`}>
@@ -141,7 +141,7 @@ export function TemplateDetailPage() {
           <Frame>
             <iframe
               title={`${template.name} sample`}
-              src={templateSampleUrl(template.id)}
+              srcDoc={template.sampleHtml}
               sandbox="allow-same-origin"
             />
           </Frame>
