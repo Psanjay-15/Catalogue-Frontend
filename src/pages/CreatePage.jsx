@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -7,6 +7,7 @@ import {
   FiAlertCircle,
   FiFileText,
   FiSettings,
+  FiUpload,
 } from "react-icons/fi";
 import { Container } from "../components/ui/Container";
 import { Card } from "../components/ui/Card";
@@ -25,7 +26,12 @@ import {
   THEME_OPTIONS,
   PROVIDER_OPTIONS,
 } from "../constants/options";
-import { createCatalog, listTemplates, toErrorMessage } from "../services";
+import {
+  createCatalog,
+  extractTextFromFile,
+  listTemplates,
+  toErrorMessage,
+} from "../services";
 
 const SAMPLE_TEXT = `Aurora Coffee Roasters — a small-batch specialty coffee roaster founded in 2016 in Portland, Oregon.
 
@@ -155,6 +161,10 @@ export function CreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
+  const fileRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedName, setUploadedName] = useState(null);
+
   useEffect(() => {
     listTemplates()
       .then(setTemplates)
@@ -178,6 +188,23 @@ export function CreatePage() {
 
   function set(key, value) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function handleFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file) return;
+    setError(null);
+    setUploading(true);
+    try {
+      const { text, filename, chars } = await extractTextFromFile(file);
+      set("source_text", text);
+      setUploadedName(`${filename} · ${chars.toLocaleString()} characters`);
+    } catch (err) {
+      setError(toErrorMessage(err));
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSubmit(e) {
@@ -226,25 +253,60 @@ export function CreatePage() {
             label={
               <TextHeader style={{ width: "100%" }}>
                 <span>Brand &amp; product details</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => set("source_text", SAMPLE_TEXT)}
-                >
-                  Try sample text
-                </Button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <input
+                    ref={fileRef}
+                    type="file"
+                    accept=".pdf,.docx,.txt"
+                    hidden
+                    onChange={handleFile}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={uploading}
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    {uploading ? (
+                      <>
+                        <Spinner size={14} /> Reading…
+                      </>
+                    ) : (
+                      <>
+                        <FiUpload size={14} /> Upload PDF / DOCX / TXT
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      set("source_text", SAMPLE_TEXT);
+                      setUploadedName(null);
+                    }}
+                  >
+                    Try sample text
+                  </Button>
+                </div>
               </TextHeader>
             }
           >
             <Textarea
-              placeholder="Paste anything — a company description, a product list, raw notes. The more detail you give, the richer the catalog. No formatting needed."
+              placeholder="Paste anything — or upload a PDF/DOCX/TXT above. A company description, a product list, raw notes. The more detail you give, the richer the catalog. No formatting needed."
               value={form.source_text}
-              onChange={(e) => set("source_text", e.target.value)}
+              onChange={(e) => {
+                set("source_text", e.target.value);
+                if (uploadedName) setUploadedName(null);
+              }}
               style={{ minHeight: 320 }}
             />
           </Field>
-          <CharCount>{form.source_text.length} characters</CharCount>
+          <CharCount>
+            {form.source_text.length} characters
+            {uploadedName ? ` · imported from ${uploadedName}` : ""}
+          </CharCount>
 
           {error && (
             <ErrorBox>

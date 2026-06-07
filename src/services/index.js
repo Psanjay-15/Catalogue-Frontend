@@ -49,6 +49,16 @@ export async function createCatalog(payload) {
   return data;
 }
 
+export async function extractTextFromFile(file) {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await axios.post(`${API_BASE}/catalogs/extract`, form, {
+    headers: { "Content-Type": "multipart/form-data" },
+    timeout: 60000,
+  });
+  return data; 
+}
+
 export async function getCatalog(id) {
   const { data } = await axios.get(`${API_BASE}/catalogs/${id}`);
   return data;
