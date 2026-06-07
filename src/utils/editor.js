@@ -17,7 +17,14 @@ export const EDITOR_CSS = `
 `;
 
 export function stripScripts(html) {
-  return (html || "").replace(/<script[\s\S]*?<\/script>/gi, "");
+  return (html || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<\/?\s*script\b[^>]*>/gi, "")
+    .replace(/\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)/gi, "")
+    .replace(
+      /(\s(?:href|src|xlink:href)\s*=\s*)(["']?)\s*javascript:[^"'>\s]*/gi,
+      "$1$2#"
+    );
 }
 
 export function serializeDoc(doc) {
