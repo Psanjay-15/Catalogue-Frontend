@@ -13,13 +13,6 @@ export const THEME_OPTIONS = [
   { value: "dark", label: "Dark" },
 ];
 
-export const PAGE_SIZE_OPTIONS = [
-  { value: "A4", label: "A4" },
-  { value: "A3", label: "A3" },
-  { value: "A2", label: "A2" },
-  { value: "Letter", label: "Letter" },
-];
-
 export const PROVIDER_OPTIONS = [
   { value: "gemini", label: "Gemini", hint: "Google — cloud" },
   { value: "ollama", label: "Ollama", hint: "Local — free" },

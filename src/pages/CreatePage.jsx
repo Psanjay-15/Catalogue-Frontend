@@ -23,7 +23,6 @@ import { OptionPills } from "../components/ui/OptionPills";
 import {
   STYLE_OPTIONS,
   THEME_OPTIONS,
-  PAGE_SIZE_OPTIONS,
   PROVIDER_OPTIONS,
 } from "../constants/options";
 import { createCatalog, listTemplates, toErrorMessage } from "../services";
@@ -151,7 +150,6 @@ export function CreatePage() {
     template_name: presetTemplate || "ai",
     style: "modern",
     theme: "light",
-    page_size: "A4",
     llm_provider: "gemini",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -294,16 +292,6 @@ export function CreatePage() {
                 options={THEME_OPTIONS}
                 value={form.theme}
                 onChange={(v) => set("theme", v)}
-              />
-            </div>
-
-            <div>
-              <FieldLabel style={{ marginBottom: 8 }}>Page size</FieldLabel>
-              <OptionPills
-                name="page_size"
-                options={PAGE_SIZE_OPTIONS}
-                value={form.page_size}
-                onChange={(v) => set("page_size", v)}
               />
             </div>
 
