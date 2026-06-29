@@ -107,15 +107,7 @@ export function Footer() {
             <Link to="/templates">Templates</Link>
             <Link to="/create">Create catalog</Link>
           </Col>
-          <Col>
-            <h4>Resources</h4>
-            <a href="http://localhost:8000/docs" target="_blank" rel="noreferrer">
-              API docs
-            </a>
-            <a href="http://localhost:8000/health" target="_blank" rel="noreferrer">
-              Service health
-            </a>
-          </Col>
+         
         </Cols>
       </Inner>
       <Base>© {new Date().getFullYear()} Cataloge — AI Catalog Maker.</Base>
