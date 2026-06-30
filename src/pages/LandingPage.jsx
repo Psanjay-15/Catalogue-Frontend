@@ -175,7 +175,7 @@ const STEPS = [
   {
     icon: <FiUploadCloud size={22} />,
     title: "Drop in your content",
-    body: "Paste raw notes or product details — no formatting required.",
+    body: "Paste raw notes or product details - no formatting required.",
   },
   {
     icon: <FiCpu size={22} />,
@@ -203,7 +203,7 @@ const FEATURES = [
   {
     icon: <FiEdit3 size={24} />,
     title: "Fully editable output",
-    body: "Every text node is editable in the rendered HTML — tweak copy without touching code.",
+    body: "Every text node is editable in the rendered HTML - tweak copy without touching code.",
   },
   {
     icon: <FiLayout size={24} />,
@@ -227,7 +227,7 @@ export function LandingPage() {
           </h1>
           <p className="lead">
             Cataloge turns a messy paragraph of product details into a clean,
-            editable one-page brochure — designed, written, and export-ready.
+            editable one-page brochure - designed, written, and export-ready.
           </p>
           <div className="cta">
             <Button to="/create" size="lg">
@@ -243,7 +243,7 @@ export function LandingPage() {
       <Section
         eyebrow="How it works"
         title="Four steps, one page"
-        subtitle="No design skills needed. Bring the content — Cataloge handles structure, styling, and export."
+        subtitle="No design skills needed. Bring the content - Cataloge handles structure, styling, and export."
       >
         <Steps>
           {STEPS.map((s, i) => (

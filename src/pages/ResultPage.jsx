@@ -103,7 +103,7 @@ export function ResultPage() {
             <h1>Building your catalog</h1>
             <p className="sub">
               {STATUS_COPY[status] ||
-                "Hang tight — this usually takes 30–60 seconds."}
+                "Hang tight - this usually takes 30–60 seconds."}
             </p>
             <StatusTimeline status={status || "queued"} />
           </ProgressCard>

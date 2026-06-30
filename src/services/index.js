@@ -1,5 +1,5 @@
 /**
- * The app's single API surface. Components import from here only — they never
+ * The app's single API surface. Components import from here only - they never
  * touch axios directly. Each function maps to one backend endpoint.
  *
  *   Templates:

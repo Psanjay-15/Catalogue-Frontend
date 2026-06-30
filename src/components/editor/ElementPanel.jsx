@@ -250,7 +250,7 @@ export function ElementPanel({
         <Empty>
           <FiLayers size={26} />
           <p>
-            Click any element to style, duplicate, or remove it — or add a new
+            Click any element to style, duplicate, or remove it - or add a new
             section below.
           </p>
           <Button size="sm" onClick={onAddSection}>
@@ -312,7 +312,7 @@ export function ElementPanel({
           </Group>
 
           <Group>
-            <label>Width — {currentWidth}px</label>
+            <label>Width - {currentWidth}px</label>
             <Range
               type="range"
               min={40}
@@ -385,7 +385,7 @@ export function ElementPanel({
           </Group>
 
           <Group>
-            <label>Font size — {parsePx(cs.fontSize)}px</label>
+            <label>Font size - {parsePx(cs.fontSize)}px</label>
             <MiniSelect
               value={parsePx(cs.fontSize)}
               onChange={(e) => onStyle("font-size", `${e.target.value}px`)}
@@ -515,7 +515,7 @@ export function ElementPanel({
           </Group>
 
           <Group>
-            <label>Width — {sectionW}px</label>
+            <label>Width - {sectionW}px</label>
             <Range
               type="range"
               min={120}
@@ -527,7 +527,7 @@ export function ElementPanel({
           </Group>
 
           <Group>
-            <label>Height — {sectionH}px</label>
+            <label>Height - {sectionH}px</label>
             <Range
               type="range"
               min={40}

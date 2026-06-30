@@ -97,7 +97,7 @@ export function Footer() {
           </span>
           <p>
             Turn raw brand and product notes into a polished, editable one-page
-            catalog — powered by AI.
+            catalog - powered by AI.
           </p>
         </Brand>
 
@@ -110,7 +110,7 @@ export function Footer() {
          
         </Cols>
       </Inner>
-      <Base>© {new Date().getFullYear()} Cataloge — AI Catalog Maker.</Base>
+      <Base>© {new Date().getFullYear()} Cataloge - AI Catalog Maker.</Base>
     </Wrap>
   );
 }

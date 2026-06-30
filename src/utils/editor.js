@@ -112,6 +112,14 @@ export function getSections(doc) {
   );
 }
 
+function getMovableSiblings(el) {
+  const parent = el?.parentElement;
+  if (!parent) return [];
+  return Array.from(parent.children).filter(
+    (n) => n.nodeType === 1 && !n.hasAttribute(CAT_UI_ATTR)
+  );
+}
+
 export function moveSection(section, dir) {
   if (!section) return false;
   const parent = section.parentElement;
@@ -184,7 +192,7 @@ export function createBlock(doc, type) {
     case "text":
     default:
       el = doc.createElement("p");
-      el.textContent = "New text — click to edit.";
+      el.textContent = "New text - click to edit.";
       el.style.cssText = "margin:0;font-size:13px;line-height:1.5;";
       break;
   }
@@ -291,7 +299,8 @@ export function createSectionOverlay(doc, { onChange } = {}) {
   const win = doc.defaultView;
   let target = null;       
   let mode = null;        
-  let start = null;        
+  let start = null;
+  let previousDesignMode = "off";
 
   const overlay = doc.createElement("div");
   overlay.id = "cat-section-overlay";
@@ -394,7 +403,7 @@ export function createSectionOverlay(doc, { onChange } = {}) {
   function onMove(e) {
     if (!mode || !target) return;
     if (mode === "move") {
-      reorderToPointer(e.clientY);
+      reorderToPointer(e.clientX, e.clientY);
       reposition();
       return;
     }
@@ -410,29 +419,51 @@ export function createSectionOverlay(doc, { onChange } = {}) {
     reposition();
   }
 
-  function reorderToPointer(clientY) {
-    const sections = getSections(doc);
-    const i = sections.indexOf(target);
+  function sectionDistance(section, clientX, clientY) {
+    const r = section.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    return Math.hypot(clientX - cx, clientY - cy);
+  }
+
+  function reorderToPointer(clientX, clientY) {
+    const parent = target.parentElement;
+    if (!parent) return;
+
+    const siblings = getMovableSiblings(target);
+    const i = siblings.indexOf(target);
     if (i === -1) return;
-    const prev = sections[i - 1];
-    const next = sections[i + 1];
-    if (prev) {
-      const pr = prev.getBoundingClientRect();
-      if (clientY < pr.top + pr.height / 2) {
-        prev.parentElement.insertBefore(target, prev);
-        return;
-      }
-    }
-    if (next) {
-      const nr = next.getBoundingClientRect();
-      if (clientY > nr.top + nr.height / 2) {
-        next.parentElement.insertBefore(next, target);
-      }
+
+    const others = siblings.filter((section) => section !== target);
+    if (!others.length) return;
+
+    const nearest = others.reduce((best, section) =>
+      sectionDistance(section, clientX, clientY) <
+      sectionDistance(best, clientX, clientY)
+        ? section
+        : best
+    );
+    const r = nearest.getBoundingClientRect();
+    const isHorizontal =
+      Math.abs(clientX - (r.left + r.width / 2)) >
+      Math.abs(clientY - (r.top + r.height / 2));
+    const shouldPlaceBefore = isHorizontal
+      ? clientX < r.left + r.width / 2
+      : clientY < r.top + r.height / 2;
+
+    if (shouldPlaceBefore) {
+      parent.insertBefore(target, nearest);
+    } else {
+      parent.insertBefore(target, nearest.nextElementSibling);
     }
   }
 
   function onUp() {
     if (!mode) return;
+    if (mode === "move") {
+      target.style.opacity = start?.opacity || "";
+      doc.designMode = previousDesignMode;
+    }
     mode = null;
     start = null;
     moveTab.style.cursor = "grab";
@@ -448,8 +479,19 @@ export function createSectionOverlay(doc, { onChange } = {}) {
     e.stopPropagation();
     mode = kind;
     const r = target.getBoundingClientRect();
-    start = { x: e.clientX, y: e.clientY, w: r.width, h: r.height };
-    if (kind === "move") moveTab.style.cursor = "grabbing";
+    start = {
+      x: e.clientX,
+      y: e.clientY,
+      w: r.width,
+      h: r.height,
+      opacity: target.style.opacity,
+    };
+    if (kind === "move") {
+      previousDesignMode = doc.designMode;
+      doc.designMode = "off";
+      target.style.opacity = "0.72";
+      moveTab.style.cursor = "grabbing";
+    }
     try {
       e.target.setPointerCapture(e.pointerId);
     } catch {

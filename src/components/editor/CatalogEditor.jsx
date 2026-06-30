@@ -377,7 +377,15 @@ export function CatalogEditor({ catalog, onSaved }) {
     const sec =
       editing && selectedEl && doc ? findSectionRoot(selectedEl, doc) : null;
     setSectionEl(sec);
-    overlayRef.current?.setTarget(sec);
+    const overlayTarget =
+      editing &&
+      selectedEl &&
+      doc &&
+      selectedEl !== doc.body &&
+      selectedEl !== doc.documentElement
+        ? selectedEl
+        : null;
+    overlayRef.current?.setTarget(overlayTarget);
   }, [editing, selectedEl, getDoc]);
 
   useLayoutEffect(() => {
@@ -644,7 +652,7 @@ export function CatalogEditor({ catalog, onSaved }) {
         <div className="actions">
           {librarySaved && !libSaving && (
             <SaveNote>
-              <FiCheckCircle size={15} /> Saved to library —{" "}
+              <FiCheckCircle size={15} /> Saved to library -{" "}
               <Link to="/saved">View library</Link>
             </SaveNote>
           )}
@@ -737,9 +745,9 @@ export function CatalogEditor({ catalog, onSaved }) {
         <>
           <Hint>
             <FiEdit3 size={14} />
-            Click text to edit it. Click a section to resize it (drag the
-            handles), drag the “move” tab to reorder, or use the panel to set
-            its background, size, and order.
+            Click any card, block, image, or section to select it. Use the
+            handles to resize, drag the move tab to reorder it, or use the panel
+            to duplicate and delete.
           </Hint>
           <EditorToolbar
             exec={exec}

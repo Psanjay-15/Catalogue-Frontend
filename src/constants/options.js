@@ -14,8 +14,8 @@ export const THEME_OPTIONS = [
 ];
 
 export const PROVIDER_OPTIONS = [
-  { value: "gemini", label: "Gemini", hint: "Google — cloud" },
-  { value: "ollama", label: "Ollama", hint: "Local — free" },
+  { value: "gemini", label: "Gemini", hint: "Google - cloud" },
+  { value: "ollama", label: "Ollama", hint: "Local - free" },
   { value: "openai", label: "OpenAI", hint: "Cloud" },
   { value: "anthropic", label: "Claude", hint: "Cloud" },
 ];

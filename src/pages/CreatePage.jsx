@@ -33,14 +33,14 @@ import {
   toErrorMessage,
 } from "../services";
 
-const SAMPLE_TEXT = `Aurora Coffee Roasters — a small-batch specialty coffee roaster founded in 2016 in Portland, Oregon.
+const SAMPLE_TEXT = `Aurora Coffee Roasters - a small-batch specialty coffee roaster founded in 2016 in Portland, Oregon.
 
 We source single-origin beans directly from farmers in Ethiopia, Colombia, and Guatemala, paying above fair-trade prices. Everything is roasted in small batches and shipped within 48 hours.
 
 Products:
-- Sunrise Blend — bright, citrusy light roast. $18/12oz bag.
-- Midnight Espresso — rich dark roast with chocolate notes. $20/12oz.
-- Decaf Reserve — Swiss water process, full flavor. $19/12oz.
+- Sunrise Blend - bright, citrusy light roast. $18/12oz bag.
+- Midnight Espresso - rich dark roast with chocolate notes. $20/12oz.
+- Decaf Reserve - Swiss water process, full flavor. $19/12oz.
 
 We've served 12,000+ customers, with a 94% repeat rate. Carbon-neutral shipping since 2021.
 
@@ -294,7 +294,7 @@ export function CreatePage() {
             }
           >
             <Textarea
-              placeholder="Paste anything — or upload a PDF/DOCX/TXT above. A company description, a product list, raw notes. The more detail you give, the richer the catalog. No formatting needed."
+              placeholder="Paste anything - or upload a PDF/DOCX/TXT above. A company description, a product list, raw notes. The more detail you give, the richer the catalog. No formatting needed."
               value={form.source_text}
               onChange={(e) => {
                 set("source_text", e.target.value);
