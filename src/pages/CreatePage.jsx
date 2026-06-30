@@ -85,10 +85,10 @@ const Layout = styled.form`
 `;
 
 const Panel = styled(Card)`
-  padding: 24px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 15px;
 `;
 
 const PanelTitle = styled.div`
@@ -357,9 +357,9 @@ export function CreatePage() {
               />
             </div>
 
-            <Divider />
+            {/* <Divider /> */}
 
-            <div>
+            {/* <div>
               <FieldLabel style={{ marginBottom: 8 }}>
                 AI provider
               </FieldLabel>
@@ -369,7 +369,7 @@ export function CreatePage() {
                 value={form.llm_provider}
                 onChange={(v) => set("llm_provider", v)}
               />
-            </div>
+            </div> */}
           </Panel>
 
           <Button type="submit" size="lg" block disabled={submitting}>
